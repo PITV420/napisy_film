@@ -11,59 +11,52 @@ def getData(directory, file):
     path = directory + '/' + file
     samples, rate = audio_reader(path)
     position = file.find('0')
-    position2 = file.find('.')
     return samples, rate, file[position+1] + '_' + file[:position], path
 
-
-def saveSpeakers(data, name):
+def save(data, name, number):
     """
     Changing data save format
 
-    Returns data as a list of lists in following order:
+    Returns data as a list of lists in following order (oposit-alphabetical):
 
-    Gender:     Man,    Woman,
+    Name:      Traffic, Restaurant,    ...
     Number:
+    0:          data    data
     1:          data    data
     2:          data    data
-    3:          data    data
     ...         ...     ...
 
-    Access elements by restructured[Digit index][Gender index]
+    Access elements by restructured[Number index][Name index]
     """
     createObj = []
-    for i in range(4):
+    keys = []
+    for i in range(number):
         createObj.append([])
+        keys.append([])
 
     for key in data:
         createObj[int(key[0])].append(data[key])
+        position = key.find('_')
+        keys[int(key[0])].append(key[position+1:]+'0'+key[position-1])
 
-    file = open(name, 'wb')
+
+    file = open(name+'.p', 'wb')
     pickle.dump(createObj, file)
 
-def saveNoise(data, name):
-    """
-    Changing data save format
+    fileKeys = open(name+'_keys.p', 'wb')
+    pickle.dump(keys, fileKeys)
 
-    Returns data as a list of lists in following order (alphabetically):
-
-    Name:       Crowd,   Jazz,    ...
-    Number:
-    1:          data    data
-    2:          data    data
-    3:          data    data
-    ...         ...     ...
-
-    Access elements by restructured[Digit index][Gender index]
-    """
-    createObj = []
-    for i in range(2):
-        createObj.append([])
-
-    for key in data:
-        createObj[int(key[0])].append(data[key])
-
-    file = open(name, 'wb')
-    pickle.dump(createObj, file)
+def reconstrut(filenameData, filenameKeys):
+    with open(filenameData, 'rb') as file:
+        data = pickle.load(file)
+    with open(filenameKeys, 'rb') as keys:
+        keys = pickle.load(keys)
+    reconstructed = {}
+    for i in range(len(keys)):
+        for j in range(len(keys[i])):
+            reconstructed[keys[i][j]] = data[i][j]
+    
+    return reconstructed
 
 def main():
     for j in range(2):
@@ -75,15 +68,12 @@ def main():
         else:
             fileDirectory = 'files/Speakers'
 
-
         for fileName in os.listdir(fileDirectory):
             if fileName.endswith('.wav'):
                 data_ = getData(fileDirectory, fileName)
                 samples[data_[2]] = data_[0]
-
+                print(samples)
         if j < 1:
-            saveNoise(samples, 'files/samplesNoise.p')
+            save(samples, 'files/samplesNoise', 2)
         else:
-            saveSpeakers(samples, 'files/samplesSpeaker.p')
-
-main()
+            save(samples, 'files/samplesSpeaker', 5)
