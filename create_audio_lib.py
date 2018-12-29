@@ -44,7 +44,7 @@ def saveNoise(data, name):
     """
     Changing data save format
 
-    Returns data as a list of lists in following order (alphabetical):
+    Returns data as a list of lists in following order (alphabetically):
 
     Name:       Crowd,   Jazz,    ...
     Number:
