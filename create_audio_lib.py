@@ -46,16 +46,26 @@ def save(data, name, number):
     fileKeys = open(name+'_keys.p', 'wb')
     pickle.dump(keys, fileKeys)
 
-def reconstrut(filenameData, filenameKeys):
-    with open(filenameData, 'rb') as file:
+def reconstruct(filenameData):
+    """
+    Reconstructing data & attaching keys to samples
+
+    for example:
+
+    woman00: array([samples]), man00: array([samples]), ...
+
+    Access elements using keys
+    """
+    with open(filenameData+'.p', 'rb') as file:
         data = pickle.load(file)
-    with open(filenameKeys, 'rb') as keys:
+    with open(filenameData+'_keys.p', 'rb') as keys:
         keys = pickle.load(keys)
     reconstructed = {}
     for i in range(len(keys)):
         for j in range(len(keys[i])):
             reconstructed[keys[i][j]] = data[i][j]
-    
+
+    print(reconstructed['woman00'])
     return reconstructed
 
 def main():
