@@ -10,35 +10,39 @@ def audio_reader(path):
 def getData(directory, file):
     path = directory + '/' + file
     samples, rate = audio_reader(path)
-    position = file.find('0')
-    return samples, rate, file[position+1] + '_' + file[:position], path
+    file = file[:file.find('.')]
+    return samples, rate, file, path
 
-def save(data, name, number):
+def save(data, name):
     """
     Changing data save format
-
-    Returns data as a list of lists in following order (oposit-alphabetical):
-
+    Returns data as a list of lists in following order (alphabetical):
     Name:      Traffic, Restaurant,    ...
     Number:
     0:          data    data
     1:          data    data
     2:          data    data
     ...         ...     ...
-
     Access elements by restructured[Number index][Name index]
     """
     createObj = []
     keys = []
-    for i in range(number):
+    dataSorted = sorted(data)
+
+    for i in dataSorted:
         createObj.append([])
         keys.append([])
 
-    for key in data:
-        createObj[int(key[0])].append(data[key])
-        position = key.find('_')
-        keys[int(key[0])].append(key[position+1:]+'0'+key[position-1])
+    keys.append([])
 
+    number = 0
+    for j in dataSorted:
+        keys[0].append(j)
+        dataSorted2 = sorted(data[j])
+        for k in dataSorted2:
+            createObj[number].append(data[j][k])
+            keys[number+1].append(k)
+        number += 1
 
     file = open(name+'.p', 'wb')
     pickle.dump(createObj, file)
@@ -49,23 +53,21 @@ def save(data, name, number):
 def reconstruct(filenameData):
     """
     Reconstructing data & attaching keys to samples
-
     for example:
-
-    woman00: array([samples]), man00: array([samples]), ...
-
+    woman00: array([samples]), ...
     Access elements using keys
     """
     with open(filenameData+'.p', 'rb') as file:
         data = pickle.load(file)
     with open(filenameData+'_keys.p', 'rb') as keys:
         keys = pickle.load(keys)
+    names = keys[0]
+    keys = keys[1:]
     reconstructed = {}
     for i in range(len(keys)):
         for j in range(len(keys[i])):
-            reconstructed[keys[i][j]] = data[i][j]
+            reconstructed[names[i]+'0'+keys[i][j]] = data[i][j]
 
-    print(reconstructed['woman00'])
     return reconstructed
 
 def main():
@@ -81,9 +83,15 @@ def main():
         for fileName in os.listdir(fileDirectory):
             if fileName.endswith('.wav'):
                 data_ = getData(fileDirectory, fileName)
-                samples[data_[2]] = data_[0]
-                print(samples)
-        if j < 1:
-            save(samples, 'files/samplesNoise', 2)
+                getNum = data_[2][data_[2].find('0')+1]
+                getNam = data_[2][:data_[2].find('0')]
+                helper = {}
+                helper[getNum] = data_[0]
+                if not getNam in samples:
+                    samples[getNam] = helper
+                else:
+                    samples[getNam].update(helper)
+        if j<1:
+            save(samples, 'files/sampleNoises')
         else:
-            save(samples, 'files/samplesSpeaker', 5)
+            save(samples, 'files/sampleSpeakers')
