@@ -1,8 +1,3 @@
-"""
-Parametrize vocal samples from training set
-"""
-
-
 from python_speech_features import mfcc, delta
 import scipy.io.wavfile as wav
 import numpy as np
@@ -11,42 +6,39 @@ import pickle
 
 
 def audio_reader(path):
-    sampleRate, channel = wav.read(path)
+    sample_rate, channel = wav.read(path)
     channel = channel/32768
-    return channel, sampleRate
+    return channel, sample_rate
 
 
-def loadConfig(path):
-
+def load_config(path):
     try:
-        with open(path, 'r') as file:
-            lines = file.readlines()
-            file.close()
+        file = open(path, 'r')
+        lines = file.readlines()
+        file.close()
 
-            cfg = {}
-            for line in lines:
-                key, value = line.replace('\n', '').split('=')
-                cfg[key] = value
+        cfg = {}
+        for line in lines:
+            key, value = line.replace('\n', '').split('=')
+            cfg[key] = value
 
-            cfg['window_length'] = float(cfg['window_length'])
-            cfg['window_step'] = float(cfg['window_step'])
-            cfg['cepstrum_number'] = int(cfg['cepstrum_number'])
-            cfg['filter_number'] = int(cfg['filter_number'])
-            cfg['preemphasis_filter'] = float(cfg['preemphasis_filter'])
-            cfg['use_delta'] = bool(cfg['use_delta'])
-            cfg['delta_sample'] = int(cfg['delta_sample'])
-            cfg['use_delta_delta'] = bool(cfg['use_delta_delta'])
-            cfg['delta_delta_sample'] = int(cfg['delta_delta_sample'])
-            if cfg['window_function'] == 'bartlett':
-                cfg['window_function'] = np.bartlett
-            elif cfg['window_function'] == 'blackman':
-                cfg['window_function'] = np.blackman
-            elif cfg['window_function'] == 'hanning':
-                cfg['window_function'] = np.hanning
-            elif cfg['window_function'] == 'kaiser':
-                cfg['window_function'] = np.kaiser
-            else:
-                cfg['window_function'] = np.hamming
+        cfg['window_length'] = float(cfg['window_length'])
+        cfg['window_step'] = float(cfg['window_step'])
+        cfg['cepstrum_number'] = int(cfg['cepstrum_number'])
+        cfg['filter_number'] = int(cfg['filter_number'])
+        cfg['preemphasis_filter'] = float(cfg['preemphasis_filter'])
+        cfg['delta_sample'] = int(cfg['delta_sample'])
+        cfg['delta_delta_sample'] = int(cfg['delta_delta_sample'])
+        if cfg['window_function'] == 'bartlett':
+            cfg['window_function'] = np.bartlett
+        elif cfg['window_function'] == 'blackman':
+            cfg['window_function'] = np.blackman
+        elif cfg['window_function'] == 'hanning':
+            cfg['window_function'] = np.hanning
+        elif cfg['window_function'] == 'kaiser':
+            cfg['window_function'] = np.kaiser
+        else:
+            cfg['window_function'] = np.hamming
 
     except Exception as e:
         print('Error:', e, '// using default config')
@@ -58,22 +50,13 @@ def loadConfig(path):
             'preemphasis_filter': 0.97,
             'window_function': 'hamming',
             'delta_sample': 2,
-            'use_delta': True,
-            'delta_delta_sample': 2,
-            'use_delta_delta': True
+            'delta_delta_sample': 2
         }
 
     return cfg
 
 
 def computeMFCC(data, fs, cfg):
-    """
-    :param data: audio file as an array of samples
-    :param fs: sample rate of the audio file
-    :param cfg: config file for parametrization
-    :return: mfcc matrix
-    """
-
     fft_size = 2
     while fft_size < cfg['window_length'] * fs:
         fft_size *= 2
@@ -82,19 +65,14 @@ def computeMFCC(data, fs, cfg):
                      numcep=cfg['cepstrum_number'], nfilt=cfg['filter_number'], preemph=cfg['preemphasis_filter'],
                      winfunc=cfg['window_function'])
 
-    if cfg['use_delta'] or cfg['use_delta_delta']:
-        data_mfcc = np.concatenate((data_mfcc, delta(data_mfcc, cfg['delta_sample'])), axis=1)
-
-    if cfg['use_delta_delta']:
-        data_mfcc = np.concatenate(((data_mfcc, delta(data_mfcc, cfg['delta_delta_sample']))), axis=1)
-
     return data_mfcc
 
 
 def getData(directory, file):
     path = directory + '/' + file
     samples, rate = audio_reader(path)
-    return samples, rate, file[6] + '_' + file[:5], path
+    file = file[:file.find('.')]
+    return samples, rate, file, path
 
 
 def restructure(data):
@@ -103,24 +81,48 @@ def restructure(data):
 
     Returns data as a list of lists in following order:
 
-    Speakers:   0,      1,      2,      ...
+    Sex:   Man,      Woman
     Digits:
-    0:          data    data    data    ...
-    1:          data    data    data    ...
-    2:          data    data    data    ...
-    ...         ...     ...     ...     ...
+    0:          data    data
+    1:          data    data
+    2:          data    data
+    ...         ...     ...
 
     Access elements by restructured[Digit index][Speaker index]
+    IMPORTANT: Both keys are string values!
+
     """
-    restructured = []
-    for i in range(10):
-        restructured.append([])
+    createObj = []
+    keys = []
+    dataSorted = sorted(data)
 
-    for key in data:
-        restructured[int(key[0])].append(data[key])
+    for i in dataSorted:
+        createObj.append([])
+        keys.append([])
 
-    print(restructured)
-    return restructured
+    keys.append([])
+
+    number = 0
+    for j in dataSorted:
+        keys[0].append(j)
+        dataSorted2 = sorted(data[j])
+        for k in dataSorted2:
+            createObj[number].append(data[j][k])
+            keys[number + 1].append(k)
+        number += 1
+
+    return createObj, keys
+
+
+def compute_deltas(data, num):
+    deltas = []
+    for row in data:
+        new_row = []
+        for item in row:
+            new_row.append(delta(item, num))
+        deltas.append(new_row)
+
+    return deltas
 
 
 def save(obj, name):
@@ -128,24 +130,38 @@ def save(obj, name):
     pickle.dump(obj, file)
 
 
-def main():
-    """
-    Parametrize train set using mfcc algorithm
+config = load_config('config/mfcc.cfg')
 
-    :save: data to parametrized.p
-    """
+parameters = {}
 
-    config = loadConfig('config/mfcc.cfg')
+file_directory = 'Speakers'
+for filename in os.listdir(file_directory):
+    if filename.endswith('.wav'):
+        data_ = getData(file_directory, filename)
+        getNum = data_[2][data_[2].find('0') + 1]
+        getNam = data_[2][:data_[2].find('0')]
+        helper = {}
+        helper[getNum] = computeMFCC(data_[0], data_[1], config)
+        if not getNam in parameters:
+            parameters[getNam] = helper
+        else:
+            parameters[getNam].update(helper)
 
-    parameters = {}
+data_, keys = restructure(parameters)
+save(data_, 'files/parametrized.p')
+save(keys, 'files/parametrized_keys.p')
 
-    file_directory = 'train'
-    for filename in os.listdir(file_directory):
-        if filename.endswith('.wav'):
-            data_ = getData(file_directory, filename)
-            parameters[data_[2]] = computeMFCC(data_[0], data_[1], config)
+deltas_ = compute_deltas(data_, config['delta_sample'])
+for i in range(len(data_)):
+    for j in range(len(data_[i])):
+        data_[i][j] = np.concatenate((data_[i][j], deltas_[i][j]), axis=1)
+save(data_, 'files/parametrized_delta.p')
 
-    data_ = restructure(parameters)
-    save(data_, 'files/parametrized.p')
+delta_deltas_ = compute_deltas(deltas_, config['delta_delta_sample'])
+for i in range(len(data_)):
+    for j in range(len(data_[i])):
+        data_[i][j] = np.concatenate((data_[i][j], delta_deltas_[i][j]), axis=1)
+save(data_, 'files/parametrized_delta_delta.p')
+save(keys, 'files/parametrized_delta_delta_keys.p')
 
-main()
+print(data_)
