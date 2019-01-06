@@ -50,45 +50,52 @@ def eachDigitGMM(data, cfg):
     """
     Creates a dictionary consisting of connected matrices of MFCC for every speaker,
     into one matrix for particular digit:
-
-        0: [[MFCC_Speaker_1_digit_0]
-            [MFCC_Speaker_2_digit_0]
-            .
-            .
-            .
-            [MFCC_Speaker_22_digit_0]]
-        .
-        .
-        .
-        9: [[MFCC_Speaker_1_digit_9]
-            [MFCC_Speaker_2_digit_9]
-            .
-            .
-            .
-            [MFCC_Speaker_22_digit_9]]
-
-        Returns GMM for matrix for each digit separately.
+        man: [[MFCC_man_digit_0]
+              [MFCC_man_digit_1]
+              .
+              .
+              .
+              [MFCC_man_digit_n]]
+        woman: [[MFCC_woman_digit_0]
+                [MFCC_woman_digit_1]
+                .
+                .
+                .
+                [MFCC_woman_digit_n]]
+        Returns GMM for matrix for gender separately.
     """
 
     data_gmm = {}
     data_mfcc = {}
+    data_mfcc2 = {}
+    licznik = 0
     for key1 in data:
         for key2 in data[key1]:
+            if licznik == 0:
+                data_mfcc2 = data[key1][key2]
+                licznik = 2
+            else:
+                data_mfcc2 = np.concatenate((data_mfcc2, data[key1][key2]), axis=0)
             if key2 == list(data[key1].keys())[0]:
                 data_mfcc = data[key1][key2]
             elif key2 > list(data[key1].keys())[0]:
                 data_mfcc = np.concatenate((data_mfcc, data[key1][key2]), axis=0)
-        data_gmm[key1] = compute_gmm(data_mfcc, cfg)
 
-    return data_gmm
-"""
+        data_gmm[key1] = compute_gmm(data_mfcc, cfg)
+    data_gmm2 = compute_gmm(data_mfcc2, cfg)
+
+    return data_gmm, data_gmm2
+
 def reconstruct(filenameData):
-    """ """
-    Reconstructing data & attaching keys to samples
+    """
+    Reconstructing data & attaching noise's keys to samples and than to the speakers
+
     for example:
-    woman00: array([samples]), ...
+
+    woman: {0: array([samples]) ...}, ...
+
     Access elements using keys
-    """ """
+    """
     with open(filenameData+'.p', 'rb') as file:
         data = pickle.load(file)
     with open(filenameData+'_keys.p', 'rb') as keys:
@@ -97,20 +104,25 @@ def reconstruct(filenameData):
     keys = keys[1:]
     reconstructed = {}
     for i in range(len(keys)):
+        helper = {}
         for j in range(len(keys[i])):
-            reconstructed[names[i]+'0'+keys[i][j]] = data[i][j]
+            helper[keys[i][j]] = data[i][j]
+            if not names[i] in reconstructed:
+                reconstructed[names[i]] = helper
+            else:
+                reconstructed[names[i]].update(helper)
 
     return reconstructed
-"""
 
-def save(obj):
-    file = open('files/digits_gmm.p', 'wb')
+def save(obj, name):
+    file = open(name, 'wb')
     pickle.dump(obj, file)
 
 
-parametrized_data = load_data('files/parametrized.p')
-config = load_config('config/gmm.cfg')
 
-data = eachDigitGMM(parametrized_data, config)
+parametrized_data = reconstruct('files/parametrization/parametrized_delta_delta')
+config = load_config('files/config/gmm.cfg')
 
-save(data)
+data1, data2 = eachDigitGMM(parametrized_data, config)
+save(data1, 'files/gmm/genders_gmm.p')
+save(data2, 'files/gmm/all_gmm.p')
