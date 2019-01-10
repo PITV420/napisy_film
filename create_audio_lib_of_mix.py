@@ -102,5 +102,5 @@ def main():
                     samples[data_[2]] = helper
                 else:
                     samples[data_[2]].update(helper)
-        save(samples, 'files/samplesMixed_snr_1_' + str(j))
+        save(samples, 'files/samples/samplesMixed_snr_1_' + str(j))
 
