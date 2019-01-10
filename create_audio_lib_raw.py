@@ -92,6 +92,6 @@ def main():
                 else:
                     samples[getNam].update(helper)
         if j<1:
-            save(samples, 'files/sampleNoises')
+            save(samples, 'files/samples/samplesNoises')
         else:
-            save(samples, 'files/sampleSpeakers')
+            save(samples, 'files/samples/samplesSpeakers')
