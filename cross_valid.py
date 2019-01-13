@@ -10,7 +10,6 @@ from sklearn.mixture import GaussianMixture
 import parametrization
 import computing_gmm
 
-
 def loadData(pathMFCC, pathMFCC_labels):
     with open(pathMFCC, 'rb') as fileMFCC:
         dataMFCC = pickle.load(fileMFCC)
@@ -40,9 +39,6 @@ def validateDigit(data, cfg, norm):
         test_index.append(test)
     train_index = np.asarray(train_index)
     test_index = np.asarray(test_index)
-
-    print(train_index)
-    print(test_index)
 
     rr_matrix = np.zeros((len(data), len(data[0])), dtype=int)
     tests = 0
@@ -91,25 +87,28 @@ def main(normalized=True):
     :param normalized: should data in confusion matrix be in percent or in number of recognized samples
     :return: confusion matrix
     """
-
-
-    data = parametrization.reconstruct('files/parametrization/parametrized_Mixed_snr_1_1')
     config = computing_gmm.load_config('files/config/gmm.cfg')
+    toLoop = [-1]
+    for k in toLoop:
+        if k == -1:
+            name = 'Speakers'
+        elif k == 0:
+            name = 'Noises'
+        else:
+            name = 'Mixed_snr_1_' + str(k)
+        data = parametrization.reconstruct('files/parametrization/parametrized_' + name)
 
-    MFCC = []
-    MFCC_labels = []
-    for key1 in data:
-        MFCC_helpL = []
-        MFCC_helpD = []
-        for key2 in data[key1]:
-            MFCC_helpL.append(key2)
-            MFCC_helpD.append(data[key1][key2])
-        MFCC_labels.append(MFCC_helpL)
-        MFCC.append(MFCC_helpD)
+        MFCC = []
+        MFCC_labels = []
+        for key1 in data:
+            MFCC_helpL = []
+            MFCC_helpD = []
+            for key2 in data[key1]:
+                MFCC_helpL.append(key2)
+                MFCC_helpD.append(data[key1][key2])
+            MFCC_labels.append(MFCC_helpL)
+            MFCC.append(MFCC_helpD)
+        validateDigit(MFCC, config, normalized)
 
-    MFCC = MFCC[:len(MFCC)-1]
-    MFCC_labels = MFCC_labels[:len(MFCC_labels)-1]
-    print(MFCC_labels)
-    print(validateDigit(MFCC, config, normalized))
 
 main(normalized=False)
