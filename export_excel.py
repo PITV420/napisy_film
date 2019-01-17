@@ -45,11 +45,26 @@ for k in toLoop:
     
 """
 
-with open('files/recognition_test.p', 'rb') as file:
+with open('files/Recognition/errors.p', 'rb') as file:
     matrix1 = pickle.load(file)
     print(matrix1)
 
-import_ = DataFrame(matrix1)
+matrix2 = []
+names = []
+toSave = []
+
+for key in matrix1:
+    helper = []
+    for key2 in matrix1[key]:
+        gender = key2[:key2.find("_")]
+
+        helper.append(matrix1[key][key2])
+    toSave.append(helper)
+    names.append(key)
+    names.append(helper)
+
+names.append(matrix2)
+import_ = DataFrame(toSave)
 
 
-import_.to_excel('recognition_test.xlsx', index=False, startrow=1, startcol=1)
+import_.to_excel('recognition_errors.xlsx', index=False, startrow=1, startcol=1)

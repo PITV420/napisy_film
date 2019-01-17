@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import scipy.io.wavfile as wav
 import numpy as np
 import os
+import pickle
 
 
 directory = 'files/Speakers'
@@ -15,6 +16,7 @@ def make_list(file_directory):
         if fileName.endswith('.wav'):
             list_.append(fileName)
     return list_
+
 
 
 speaker_list = make_list(directory)
@@ -86,6 +88,7 @@ def whole_framing(speakers, t_length, t_step):
 
 
 speakers_tab = whole_framing(speaker_list, 400, 200)
+
 
 
 def plotting(sounds, results):
