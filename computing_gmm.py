@@ -130,6 +130,8 @@ def main():
             name = 'Mixed_snr_1_' + str(k)
         parametrized_data = reconstruct('files/parametrization/parametrized_' + name)
         data1, data2 = eachDigitGMM(parametrized_data, config)
-        if k == 0:
+        if k == -1:
             save(data1, 'files/gmm/genders_gmm.p')
+        elif k == 0:
+            save(data1, 'files/gmm/noises_gmm.p')
         save(data2, 'files/gmm/'+ name + '_gmm.p')

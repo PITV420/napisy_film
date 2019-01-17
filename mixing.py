@@ -12,8 +12,8 @@ def make_list(file_directory):
     return list_
 
 
-speaker_list = make_list('Speakers')
-noise_list = make_list('Noises')
+speaker_list = make_list('files/Speakers')
+noise_list = make_list('files/Noises')
 
 
 def mix_waves(speakers, noises, snr):
@@ -22,8 +22,8 @@ def mix_waves(speakers, noises, snr):
     for i in range(len(speakers)):
         for j in range(len(noises)):
 
-            speaker_wave = AudioSegment.from_file("Speakers/"+speakers[i])
-            noise_wave = AudioSegment.from_file("Noises/"+noises[j])
+            speaker_wave = AudioSegment.from_file("files/Speakers/"+speakers[i])
+            noise_wave = AudioSegment.from_file("files/Noises/"+noises[j])
 
             if snr == 1:
                 """ Signal-to-noise ratio: 1/1 (Speaker and noise are equally loud). """
@@ -33,7 +33,7 @@ def mix_waves(speakers, noises, snr):
                 noise_str = noises[j].replace(".wav", "")
 
                 """ Saving mixed waves in appropriate folder """
-                mixed.export("Mixed_snr_1_1/" + speaker_str + '_' + noise_str + ".wav", format='wav')
+                mixed.export("files/Mixed_snr_1_1/" + speaker_str + '_' + noise_str + ".wav", format='wav')
 
             elif snr == 2:
                 """ Signal-to-noise ratio: 1/2 (Speaker is 2 times (6dB) louder than noise) """
@@ -45,7 +45,7 @@ def mix_waves(speakers, noises, snr):
                 noise_str = noises[j].replace(".wav", "")
 
                 """ Saving mixed waves in appropriate folder """
-                mixed.export("Mixed_snr_1_2/" + speaker_str + '_' + noise_str + ".wav", format='wav')
+                mixed.export("files/Mixed_snr_1_2/" + speaker_str + '_' + noise_str + ".wav", format='wav')
 
             elif snr == 4:
                 """ Signal-to-noise ratio: 1/4 (Speaker is 4 times (12dB) louder than noise) """
@@ -57,7 +57,7 @@ def mix_waves(speakers, noises, snr):
                 noise_str = noises[j].replace(".wav", "")
 
                 """ Saving mixed waves in appropriate folder """
-                mixed.export("Mixed_snr_1_4/" + speaker_str + '_' + noise_str + ".wav", format='wav')
+                mixed.export("files/Mixed_snr_1_4/" + speaker_str + '_' + noise_str + ".wav", format='wav')
 
             elif snr == 8:
                 """ Signal-to-noise ratio: 1/8 (Speaker is 8 times (18dB) louder than noise) """
@@ -69,7 +69,7 @@ def mix_waves(speakers, noises, snr):
                 noise_str = noises[j].replace(".wav", "")
 
                 """ Saving mixed waves in appropriate folder """
-                mixed.export("Mixed_snr_1_8/" + speaker_str + '_' + noise_str + ".wav", format='wav')
+                mixed.export("files/Mixed_snr_1_8/" + speaker_str + '_' + noise_str + ".wav", format='wav')
 
             else:
                 print("Unhandled case.")
